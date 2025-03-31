@@ -29,11 +29,18 @@ class PerspectiveTransformer:
         """
         将图像中的点坐标转换到球场坐标系
         :param point: (x, y) 形式的图像坐标
-        :return: (X, Y) 球场坐标系中的坐标
+        :return: (X, Y) 球场坐标系中的坐标 或 None（如果不在场地范围内）
         """
+        # 确保点是 NumPy 数组格式
         px = np.array([[point]], dtype=np.float32)
+        
+        # 透视变换
         transformed = cv2.perspectiveTransform(px, self.transformation_matrix)
-        return tuple(transformed[0][0])
+        transformed_point = tuple(transformed[0][0])
+
+        # 检查是否在球场范围内（四边形检测）
+        in_court = cv2.pointPolygonTest(self.src_points, point, measureDist=False) >= 0
+        return transformed_point if in_court else None
     
     def inverse_transform_point(self, point):
         """
